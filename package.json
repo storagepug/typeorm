@@ -1,7 +1,7 @@
 {
-  "name": "typeorm",
+  "name": "@pug/typeorm",
   "private": true,
-  "version": "0.2.16",
+  "version": "0.3.0",
   "description": "Data-Mapper ORM for TypeScript, ES7, ES6, ES5. Supports MySQL, PostgreSQL, MariaDB, SQLite, MS SQL Server, Oracle, MongoDB databases.",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "app-root-path": "^2.0.1",
+    "aws-sdk": "^2.437.0",
     "buffer": "^5.1.0",
     "chalk": "^2.4.2",
     "cli-highlight": "^2.0.0",
