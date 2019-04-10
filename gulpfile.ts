@@ -2,7 +2,7 @@
 ///<reference path="node_modules/@types/chai/index.d.ts"/>
 ///<reference path="node_modules/@types/mocha/index.d.ts"/>
 
-import {Gulpclass, Task, SequenceTask, MergedTask} from "gulpclass";
+import { Gulpclass, Task, SequenceTask, MergedTask } from "gulpclass";
 
 const gulp = require("gulp");
 const del = require("del");
@@ -67,7 +67,7 @@ export class Gulpfile {
             "!./src/typeorm-model-shim.ts",
             "!./src/platform/PlatformTools.ts"
         ])
-        .pipe(gulp.dest("./build/browser/src"));
+            .pipe(gulp.dest("./build/browser/src"));
     }
 
     /**
@@ -158,7 +158,7 @@ export class Gulpfile {
             .pipe(tsProject());
 
         return [
-            tsResult.dts.pipe(gulp.dest("./build/package")),
+            tsResult.dts.pipe(gulp.dest("./build/dts")),
             tsResult.js
                 .pipe(sourcemaps.write(".", { sourceRoot: "", includeContent: true }))
                 .pipe(gulp.dest("./build/package"))
@@ -170,7 +170,7 @@ export class Gulpfile {
      */
     @Task()
     packageMoveCompiledFiles() {
-        return gulp.src("./build/package/src/**/*")
+        return gulp.src("./build/package/src/**/*.js")
             .pipe(gulp.dest("./build/package"));
     }
 

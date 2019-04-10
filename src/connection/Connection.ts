@@ -1,42 +1,42 @@
-import {Driver} from "../driver/Driver";
-import {Repository} from "../repository/Repository";
-import {EntitySubscriberInterface} from "../subscriber/EntitySubscriberInterface";
-import {ObjectType} from "../common/ObjectType";
-import {EntityManager} from "../entity-manager/EntityManager";
-import {DefaultNamingStrategy} from "../naming-strategy/DefaultNamingStrategy";
-import {CannotExecuteNotConnectedError} from "../error/CannotExecuteNotConnectedError";
-import {CannotConnectAlreadyConnectedError} from "../error/CannotConnectAlreadyConnectedError";
-import {TreeRepository} from "../repository/TreeRepository";
-import {NamingStrategyInterface} from "../naming-strategy/NamingStrategyInterface";
-import {EntityMetadata} from "../metadata/EntityMetadata";
-import {Logger} from "../logger/Logger";
-import {EntityMetadataNotFoundError} from "../error/EntityMetadataNotFoundError";
-import {MigrationInterface} from "../migration/MigrationInterface";
-import {MigrationExecutor} from "../migration/MigrationExecutor";
-import {Migration} from "../migration/Migration";
-import {MongoRepository} from "../repository/MongoRepository";
-import {MongoDriver} from "../driver/mongodb/MongoDriver";
-import {MongoEntityManager} from "../entity-manager/MongoEntityManager";
-import {EntityMetadataValidator} from "../metadata-builder/EntityMetadataValidator";
-import {ConnectionOptions} from "./ConnectionOptions";
-import {QueryRunnerProviderAlreadyReleasedError} from "../error/QueryRunnerProviderAlreadyReleasedError";
-import {EntityManagerFactory} from "../entity-manager/EntityManagerFactory";
-import {DriverFactory} from "../driver/DriverFactory";
-import {ConnectionMetadataBuilder} from "./ConnectionMetadataBuilder";
-import {QueryRunner} from "../query-runner/QueryRunner";
-import {SelectQueryBuilder} from "../query-builder/SelectQueryBuilder";
-import {LoggerFactory} from "../logger/LoggerFactory";
-import {QueryResultCacheFactory} from "../cache/QueryResultCacheFactory";
-import {QueryResultCache} from "../cache/QueryResultCache";
-import {SqljsEntityManager} from "../entity-manager/SqljsEntityManager";
-import {RelationLoader} from "../query-builder/RelationLoader";
-import {RelationIdLoader} from "../query-builder/RelationIdLoader";
-import {EntitySchema} from "../";
-import {SqlServerDriver} from "../driver/sqlserver/SqlServerDriver";
-import {MysqlDriver} from "../driver/mysql/MysqlDriver";
-import {ObjectUtils} from "../util/ObjectUtils";
-import {PromiseUtils} from "../";
-import {IsolationLevel} from "../driver/types/IsolationLevel";
+import { Driver } from "../driver/Driver";
+import { Repository } from "../repository/Repository";
+import { EntitySubscriberInterface } from "../subscriber/EntitySubscriberInterface";
+import { ObjectType } from "../common/ObjectType";
+import { EntityManager } from "../entity-manager/EntityManager";
+import { DefaultNamingStrategy } from "../naming-strategy/DefaultNamingStrategy";
+import { CannotExecuteNotConnectedError } from "../error/CannotExecuteNotConnectedError";
+import { CannotConnectAlreadyConnectedError } from "../error/CannotConnectAlreadyConnectedError";
+import { TreeRepository } from "../repository/TreeRepository";
+import { NamingStrategyInterface } from "../naming-strategy/NamingStrategyInterface";
+import { EntityMetadata } from "../metadata/EntityMetadata";
+import { Logger } from "../logger/Logger";
+import { EntityMetadataNotFoundError } from "../error/EntityMetadataNotFoundError";
+import { MigrationInterface } from "../migration/MigrationInterface";
+import { MigrationExecutor } from "../migration/MigrationExecutor";
+import { Migration } from "../migration/Migration";
+import { MongoRepository } from "../repository/MongoRepository";
+import { MongoDriver } from "../driver/mongodb/MongoDriver";
+import { MongoEntityManager } from "../entity-manager/MongoEntityManager";
+import { EntityMetadataValidator } from "../metadata-builder/EntityMetadataValidator";
+import { ConnectionOptions } from "./ConnectionOptions";
+import { QueryRunnerProviderAlreadyReleasedError } from "../error/QueryRunnerProviderAlreadyReleasedError";
+import { EntityManagerFactory } from "../entity-manager/EntityManagerFactory";
+import { DriverFactory } from "../driver/DriverFactory";
+import { ConnectionMetadataBuilder } from "./ConnectionMetadataBuilder";
+import { QueryRunner } from "../query-runner/QueryRunner";
+import { SelectQueryBuilder } from "../query-builder/SelectQueryBuilder";
+import { LoggerFactory } from "../logger/LoggerFactory";
+import { QueryResultCacheFactory } from "../cache/QueryResultCacheFactory";
+import { QueryResultCache } from "../cache/QueryResultCache";
+import { SqljsEntityManager } from "../entity-manager/SqljsEntityManager";
+import { RelationLoader } from "../query-builder/RelationLoader";
+import { RelationIdLoader } from "../query-builder/RelationIdLoader";
+import { EntitySchema } from "../";
+import { SqlServerDriver } from "../driver/sqlserver/SqlServerDriver";
+import { MysqlDriver } from "../driver/mysql/MysqlDriver";
+import { ObjectUtils } from "../util/ObjectUtils";
+import { PromiseUtils } from "../";
+import { IsolationLevel } from "../driver/types/IsolationLevel";
 
 /**
  * Connection is a single database ORM connection to a specific database.
@@ -206,6 +206,7 @@ export class Connection {
 
             // if for some reason build metadata fail (for example validation error during entity metadata check)
             // connection needs to be closed
+            console.log("Build meta data failed");
             await this.close();
             throw error;
         }
@@ -307,14 +308,14 @@ export class Connection {
     /**
      * Checks if entity metadata exist for the given entity class, target name or table name.
      */
-    hasMetadata(target: Function|EntitySchema<any>|string): boolean {
+    hasMetadata(target: Function | EntitySchema<any> | string): boolean {
         return !!this.findMetadata(target);
     }
 
     /**
      * Gets entity metadata for the given entity class or schema name.
      */
-    getMetadata(target: Function|EntitySchema<any>|string): EntityMetadata {
+    getMetadata(target: Function | EntitySchema<any> | string): EntityMetadata {
         const metadata = this.findMetadata(target);
         if (!metadata)
             throw new EntityMetadataNotFoundError(target);
@@ -325,7 +326,7 @@ export class Connection {
     /**
      * Gets repository for the given entity.
      */
-    getRepository<Entity>(target: ObjectType<Entity>|EntitySchema<Entity>|string): Repository<Entity> {
+    getRepository<Entity>(target: ObjectType<Entity> | EntitySchema<Entity> | string): Repository<Entity> {
         return this.manager.getRepository(target);
     }
 
@@ -333,7 +334,7 @@ export class Connection {
      * Gets tree repository for the given entity class or name.
      * Only tree-type entities can have a TreeRepository, like ones decorated with @Tree decorator.
      */
-    getTreeRepository<Entity>(target: ObjectType<Entity>|EntitySchema<Entity>|string): TreeRepository<Entity> {
+    getTreeRepository<Entity>(target: ObjectType<Entity> | EntitySchema<Entity> | string): TreeRepository<Entity> {
         return this.manager.getTreeRepository(target);
     }
 
@@ -341,7 +342,7 @@ export class Connection {
      * Gets mongodb-specific repository for the given entity class or name.
      * Works only if connection is mongodb-specific.
      */
-    getMongoRepository<Entity>(target: ObjectType<Entity>|EntitySchema<Entity>|string): MongoRepository<Entity> {
+    getMongoRepository<Entity>(target: ObjectType<Entity> | EntitySchema<Entity> | string): MongoRepository<Entity> {
         if (!(this.driver instanceof MongoDriver))
             throw new Error(`You can use getMongoRepository only for MongoDB connections.`);
 
@@ -395,7 +396,7 @@ export class Connection {
     /**
      * Creates a new query builder that can be used to build a sql query.
      */
-    createQueryBuilder<Entity>(entityClass: ObjectType<Entity>|EntitySchema<Entity>|Function|string, alias: string, queryRunner?: QueryRunner): SelectQueryBuilder<Entity>;
+    createQueryBuilder<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | Function | string, alias: string, queryRunner?: QueryRunner): SelectQueryBuilder<Entity>;
 
     /**
      * Creates a new query builder that can be used to build a sql query.
@@ -405,18 +406,18 @@ export class Connection {
     /**
      * Creates a new query builder that can be used to build a sql query.
      */
-    createQueryBuilder<Entity>(entityOrRunner?: ObjectType<Entity>|EntitySchema<Entity>|Function|string|QueryRunner, alias?: string, queryRunner?: QueryRunner): SelectQueryBuilder<Entity> {
+    createQueryBuilder<Entity>(entityOrRunner?: ObjectType<Entity> | EntitySchema<Entity> | Function | string | QueryRunner, alias?: string, queryRunner?: QueryRunner): SelectQueryBuilder<Entity> {
         if (this instanceof MongoEntityManager)
             throw new Error(`Query Builder is not supported by MongoDB.`);
 
         if (alias) {
-            const metadata = this.getMetadata(entityOrRunner as Function|EntitySchema<Entity>|string);
+            const metadata = this.getMetadata(entityOrRunner as Function | EntitySchema<Entity> | string);
             return new SelectQueryBuilder(this, queryRunner)
                 .select(alias)
                 .from(metadata.target, alias);
 
         } else {
-            return new SelectQueryBuilder(this, entityOrRunner as QueryRunner|undefined);
+            return new SelectQueryBuilder(this, entityOrRunner as QueryRunner | undefined);
         }
     }
 
@@ -430,7 +431,7 @@ export class Connection {
      * If you perform writes you must use master database,
      * if you perform reads you can use slave databases.
      */
-    createQueryRunner(mode: "master"|"slave" = "master"): QueryRunner {
+    createQueryRunner(mode: "master" | "slave" = "master"): QueryRunner {
         const queryRunner = this.driver.createQueryRunner(mode);
         const manager = this.createEntityManager(queryRunner);
         Object.assign(queryRunner, { manager: manager });
@@ -440,12 +441,12 @@ export class Connection {
     /**
      * Gets entity metadata of the junction table (many-to-many table).
      */
-    getManyToManyMetadata(entityTarget: Function|string, relationPropertyPath: string) {
+    getManyToManyMetadata(entityTarget: Function | string, relationPropertyPath: string) {
         const relationMetadata = this.getMetadata(entityTarget).findRelationWithPropertyPath(relationPropertyPath);
         if (!relationMetadata)
-            throw new Error(`Relation "${relationPropertyPath}" was not found in ${entityTarget} entity.`);
+            throw new Error(`Relation "${ relationPropertyPath }" was not found in ${ entityTarget } entity.`);
         if (!relationMetadata.isManyToMany)
-            throw new Error(`Relation "${entityTarget}#${relationPropertyPath}" does not have a many-to-many relationship.` +
+            throw new Error(`Relation "${ entityTarget }#${ relationPropertyPath }" does not have a many-to-many relationship.` +
                 `You can use this method only on many-to-many relations.`);
 
         return relationMetadata.junctionEntityMetadata;
@@ -465,7 +466,7 @@ export class Connection {
     /**
      * Finds exist entity metadata by the given entity class, target name or table name.
      */
-    protected findMetadata(target: Function|EntitySchema<any>|string): EntityMetadata|undefined {
+    protected findMetadata(target: Function | EntitySchema<any> | string): EntityMetadata | undefined {
         return this.entityMetadatas.find(metadata => {
             if (metadata.target === target)
                 return true;
@@ -506,6 +507,7 @@ export class Connection {
 
         // validate all created entity metadatas to make sure user created entities are valid and correct
         entityMetadataValidator.validateMany(this.entityMetadatas, this.driver);
+        console.log("this.options.entities ", this.options.entities);
     }
 
 }

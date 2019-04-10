@@ -1,22 +1,23 @@
-import {Driver} from "../Driver";
-import {ConnectionIsNotSetError} from "../../error/ConnectionIsNotSetError";
-import {DriverPackageNotInstalledError} from "../../error/DriverPackageNotInstalledError";
-import {DriverUtils} from "../DriverUtils";
-import {MysqlQueryRunner} from "./MysqlQueryRunner";
-import {ObjectLiteral} from "../../common/ObjectLiteral";
-import {ColumnMetadata} from "../../metadata/ColumnMetadata";
-import {DateUtils} from "../../util/DateUtils";
-import {PlatformTools} from "../../platform/PlatformTools";
-import {Connection} from "../../connection/Connection";
-import {RdbmsSchemaBuilder} from "../../schema-builder/RdbmsSchemaBuilder";
-import {MysqlConnectionOptions} from "./MysqlConnectionOptions";
-import {MappedColumnTypes} from "../types/MappedColumnTypes";
-import {ColumnType} from "../types/ColumnTypes";
-import {DataTypeDefaults} from "../types/DataTypeDefaults";
-import {TableColumn} from "../../schema-builder/table/TableColumn";
-import {MysqlConnectionCredentialsOptions} from "./MysqlConnectionCredentialsOptions";
-import {EntityMetadata} from "../../metadata/EntityMetadata";
-import {OrmUtils} from "../../util/OrmUtils";
+import { Driver } from "../Driver";
+import { ConnectionIsNotSetError } from "../../error/ConnectionIsNotSetError";
+import { DriverPackageNotInstalledError } from "../../error/DriverPackageNotInstalledError";
+import { DriverUtils } from "../DriverUtils";
+import { MysqlQueryRunner } from "./MysqlQueryRunner";
+import { ObjectLiteral } from "../../common/ObjectLiteral";
+import { ColumnMetadata } from "../../metadata/ColumnMetadata";
+import { DateUtils } from "../../util/DateUtils";
+import { PlatformTools } from "../../platform/PlatformTools";
+import { Connection } from "../../connection/Connection";
+import { RdbmsSchemaBuilder } from "../../schema-builder/RdbmsSchemaBuilder";
+import { MysqlConnectionOptions } from "./MysqlConnectionOptions";
+import { MappedColumnTypes } from "../types/MappedColumnTypes";
+import { ColumnType } from "../types/ColumnTypes";
+import { DataTypeDefaults } from "../types/DataTypeDefaults";
+import { TableColumn } from "../../schema-builder/table/TableColumn";
+import { MysqlConnectionCredentialsOptions } from "./MysqlConnectionCredentialsOptions";
+import { EntityMetadata } from "../../metadata/EntityMetadata";
+import { OrmUtils } from "../../util/OrmUtils";
+
 
 /**
  * Organizes communication with MySQL DBMS.
@@ -317,7 +318,8 @@ export class MysqlDriver implements Driver {
      * Performs connection to the database.
      */
     async connect(): Promise<void> {
-
+        // Fake the connection
+        // return Promise.resolve();
         if (this.options.replication) {
             this.poolCluster = this.mysql.createPoolCluster(this.options.replication);
             this.options.replication.slaves.forEach((slave, index) => {
@@ -341,13 +343,18 @@ export class MysqlDriver implements Driver {
      * Closes connection with the database.
      */
     async disconnect(): Promise<void> {
+        // Fake the disconnection
+        // return Promise.resolve();
+
         if (!this.poolCluster && !this.pool)
             return Promise.reject(new ConnectionIsNotSetError("mysql"));
+
 
         if (this.poolCluster) {
             return new Promise<void>((ok, fail) => {
                 this.poolCluster.end((err: any) => err ? fail(err) : ok());
                 this.poolCluster = undefined;
+                ok();
             });
         }
         if (this.pool) {
@@ -371,7 +378,7 @@ export class MysqlDriver implements Driver {
     /**
      * Creates a query runner used to execute database queries.
      */
-    createQueryRunner(mode: "master"|"slave" = "master") {
+    createQueryRunner(mode: "master" | "slave" = "master") {
         return new MysqlQueryRunner(this, mode);
     }
 
@@ -416,7 +423,7 @@ export class MysqlDriver implements Driver {
      * E.g. "myDB"."mySchema"."myTable"
      */
     buildTableName(tableName: string, schema?: string, database?: string): string {
-        return database ? `${database}.${tableName}` : tableName;
+        return database ? `${ database }.${ tableName }` : tableName;
     }
 
     /**
@@ -502,7 +509,7 @@ export class MysqlDriver implements Driver {
     /**
      * Creates a database type from a given column metadata.
      */
-    normalizeType(column: { type: ColumnType, length?: number|string, precision?: number|null, scale?: number }): string {
+    normalizeType(column: { type: ColumnType, length?: number | string, precision?: number | null, scale?: number }): string {
         if (column.type === Number || column.type === "integer") {
             return "int";
 
@@ -554,7 +561,7 @@ export class MysqlDriver implements Driver {
         const defaultValue = columnMetadata.default;
 
         if ((columnMetadata.type === "enum" || columnMetadata.type === "simple-enum") && defaultValue !== undefined) {
-            return `'${defaultValue}'`;
+            return `'${ defaultValue }'`;
         }
 
         if (typeof defaultValue === "number") {
@@ -567,7 +574,7 @@ export class MysqlDriver implements Driver {
             return defaultValue();
 
         } else if (typeof defaultValue === "string") {
-            return `'${defaultValue}'`;
+            return `'${ defaultValue }'`;
 
         } else if (defaultValue === null) {
             return `null`;
@@ -587,7 +594,7 @@ export class MysqlDriver implements Driver {
     /**
      * Returns default column lengths, which is required on column creation.
      */
-    getColumnLength(column: ColumnMetadata|TableColumn): string {
+    getColumnLength(column: ColumnMetadata | TableColumn): string {
         if (column.length)
             return column.length.toString();
 
@@ -618,16 +625,16 @@ export class MysqlDriver implements Driver {
 
         // used 'getColumnLength()' method, because MySQL requires column length for `varchar`, `nvarchar` and `varbinary` data types
         if (this.getColumnLength(column)) {
-            type += `(${this.getColumnLength(column)})`;
+            type += `(${ this.getColumnLength(column) })`;
 
         } else if (column.width) {
-            type += `(${column.width})`;
+            type += `(${ column.width })`;
 
         } else if (column.precision !== null && column.precision !== undefined && column.scale !== null && column.scale !== undefined) {
-            type += `(${column.precision},${column.scale})`;
+            type += `(${ column.precision },${ column.scale })`;
 
         } else if (column.precision !== null && column.precision !== undefined) {
-            type += `(${column.precision})`;
+            type += `(${ column.precision })`;
         }
 
         if (column.isArray)
@@ -682,9 +689,9 @@ export class MysqlDriver implements Driver {
             let value: any;
             if (generatedColumn.generationStrategy === "increment" && insertResult.insertId) {
                 value = insertResult.insertId;
-            // } else if (generatedColumn.generationStrategy === "uuid") {
-            //     console.log("getting db value:", generatedColumn.databaseName);
-            //     value = generatedColumn.getEntityValue(uuidMap);
+                // } else if (generatedColumn.generationStrategy === "uuid") {
+                //     console.log("getting db value:", generatedColumn.databaseName);
+                //     value = generatedColumn.getEntityValue(uuidMap);
             }
 
             return OrmUtils.mergeDeep(map, generatedColumn.createValueMap(value));
@@ -824,17 +831,17 @@ export class MysqlDriver implements Driver {
             multipleStatements: options.multipleStatements,
             flags: options.flags
         }, {
-            host: credentials.host,
-            user: credentials.username,
-            password: credentials.password,
-            database: credentials.database,
-            port: credentials.port,
-            ssl: options.ssl
-        },
-        options.acquireTimeout === undefined
-          ? {}
-          : { acquireTimeout: options.acquireTimeout },
-        options.extra || {});
+                host: credentials.host,
+                user: credentials.username,
+                password: credentials.password,
+                database: credentials.database,
+                port: credentials.port,
+                ssl: options.ssl
+            },
+            options.acquireTimeout === undefined
+                ? {}
+                : { acquireTimeout: options.acquireTimeout },
+            options.extra || {});
     }
 
     /**
@@ -869,7 +876,7 @@ export class MysqlDriver implements Driver {
           cause the hosting app to crash.
          */
         if (connection.listeners("error").length === 0) {
-            connection.on("error", (error: any) => logger.log("warn", `MySQL connection raised an error. ${error}`));
+            connection.on("error", (error: any) => logger.log("warn", `MySQL connection raised an error. ${ error }`));
         }
         return connection;
     }
