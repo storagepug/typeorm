@@ -2,7 +2,7 @@
 ///<reference path="node_modules/@types/chai/index.d.ts"/>
 ///<reference path="node_modules/@types/mocha/index.d.ts"/>
 
-import {Gulpclass, Task, SequenceTask, MergedTask} from "gulpclass";
+import { Gulpclass, Task, SequenceTask, MergedTask } from "gulpclass";
 
 const gulp = require("gulp");
 const del = require("del");
@@ -67,7 +67,7 @@ export class Gulpfile {
             "!./src/typeorm-model-shim.ts",
             "!./src/platform/PlatformTools.ts"
         ])
-        .pipe(gulp.dest("./build/browser/src"));
+            .pipe(gulp.dest("./build/browser/src"));
     }
 
     /**
@@ -102,10 +102,10 @@ export class Gulpfile {
             .pipe(tsProject());
 
         return [
-            tsResult.dts.pipe(gulp.dest("./build/package/browser")),
+            tsResult.dts.pipe(gulp.dest("./build/typeorm/browser")),
             tsResult.js
                 .pipe(sourcemaps.write(".", { sourceRoot: "", includeContent: true }))
-                .pipe(gulp.dest("./build/package/browser"))
+                .pipe(gulp.dest("./build/typeorm/browser"))
         ];
     }
 
@@ -121,24 +121,24 @@ export class Gulpfile {
     // -------------------------------------------------------------------------
 
     /**
-     * Publishes a package to npm from ./build/package directory.
+     * Publishes a package to npm from ./build/typeorm directory.
      */
     @Task()
     packagePublish() {
         return gulp.src("package.json", { read: false })
             .pipe(shell([
-                "cd ./build/package && npm publish"
+                "cd ./build/typeorm && npm publish"
             ]));
     }
 
     /**
-     * Publishes a package to npm from ./build/package directory with @next tag.
+     * Publishes a package to npm from ./build/typeorm directory with @next tag.
      */
     @Task()
     packagePublishNext() {
         return gulp.src("package.json", { read: false })
             .pipe(shell([
-                "cd ./build/package && npm publish --tag next"
+                "cd ./build/typeorm && npm publish --tag next"
             ]));
     }
 
@@ -158,10 +158,10 @@ export class Gulpfile {
             .pipe(tsProject());
 
         return [
-            tsResult.dts.pipe(gulp.dest("./build/package")),
+            tsResult.dts.pipe(gulp.dest("./build/dts")),
             tsResult.js
                 .pipe(sourcemaps.write(".", { sourceRoot: "", includeContent: true }))
-                .pipe(gulp.dest("./build/package"))
+                .pipe(gulp.dest("./build/typeorm"))
         ];
     }
 
@@ -170,8 +170,8 @@ export class Gulpfile {
      */
     @Task()
     packageMoveCompiledFiles() {
-        return gulp.src("./build/package/src/**/*")
-            .pipe(gulp.dest("./build/package"));
+        return gulp.src("./build/typeorm/src/**/*.js")
+            .pipe(gulp.dest("./build/typeorm"));
     }
 
     /**
@@ -179,10 +179,10 @@ export class Gulpfile {
      */
     @Task()
     packageReplaceReferences() {
-        return gulp.src("./build/package/**/*.d.ts")
+        return gulp.src("./build/typeorm/**/*.d.ts")
             .pipe(replace(`/// <reference types="node" />`, ""))
             .pipe(replace(`/// <reference types="chai" />`, ""))
-            .pipe(gulp.dest("./build/package"));
+            .pipe(gulp.dest("./build/typeorm"));
     }
 
     /**
@@ -191,7 +191,7 @@ export class Gulpfile {
     @Task()
     packageClearPackageDirectory(cb: Function) {
         return del([
-            "build/package/src/**"
+            "build/typeorm/src/**"
         ], cb);
     }
 
@@ -202,7 +202,7 @@ export class Gulpfile {
     packagePreparePackageFile() {
         return gulp.src("./package.json")
             .pipe(replace("\"private\": true,", "\"private\": false,"))
-            .pipe(gulp.dest("./build/package"));
+            .pipe(gulp.dest("./build/typeorm"));
     }
 
     /**
@@ -212,7 +212,7 @@ export class Gulpfile {
     packageCopyReadme() {
         return gulp.src("./README.md")
             .pipe(replace(/```typescript([\s\S]*?)```/g, "```javascript$1```"))
-            .pipe(gulp.dest("./build/package"));
+            .pipe(gulp.dest("./build/typeorm"));
     }
 
     /**
@@ -221,7 +221,7 @@ export class Gulpfile {
     @Task()
     packageCopyShims() {
         return gulp.src(["./extra/typeorm-model-shim.js", "./extra/typeorm-class-transformer-shim.js"])
-            .pipe(gulp.dest("./build/package"));
+            .pipe(gulp.dest("./build/typeorm"));
     }
 
     /**
