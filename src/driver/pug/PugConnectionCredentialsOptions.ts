@@ -1,9 +1,9 @@
 /**
- * MySQL specific connection credential options.
+ * Pug specific connection credential options.
  *
  * @see https://github.com/mysqljs/mysql#connection-options
  */
-export interface MysqlConnectionCredentialsOptions {
+export interface PugConnectionCredentialsOptions {
 
     /**
      * Connection url where perform connection to.

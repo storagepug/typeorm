@@ -2,26 +2,26 @@ import { Driver } from "../Driver";
 import { ConnectionIsNotSetError } from "../../error/ConnectionIsNotSetError";
 import { DriverPackageNotInstalledError } from "../../error/DriverPackageNotInstalledError";
 import { DriverUtils } from "../DriverUtils";
-import { MysqlQueryRunner } from "./MysqlQueryRunner";
+import { PugQueryRunner } from "./PugQueryRunner";
 import { ObjectLiteral } from "../../common/ObjectLiteral";
 import { ColumnMetadata } from "../../metadata/ColumnMetadata";
 import { DateUtils } from "../../util/DateUtils";
 import { PlatformTools } from "../../platform/PlatformTools";
 import { Connection } from "../../connection/Connection";
 import { RdbmsSchemaBuilder } from "../../schema-builder/RdbmsSchemaBuilder";
-import { MysqlConnectionOptions } from "./MysqlConnectionOptions";
+import { PugConnectionOptions } from "./PugConnectionOptions";
 import { MappedColumnTypes } from "../types/MappedColumnTypes";
 import { ColumnType } from "../types/ColumnTypes";
 import { DataTypeDefaults } from "../types/DataTypeDefaults";
 import { TableColumn } from "../../schema-builder/table/TableColumn";
-import { MysqlConnectionCredentialsOptions } from "./MysqlConnectionCredentialsOptions";
+import { PugConnectionCredentialsOptions } from "./PugConnectionCredentialsOptions";
 import { EntityMetadata } from "../../metadata/EntityMetadata";
 import { OrmUtils } from "../../util/OrmUtils";
 
 /**
  * Organizes communication with MySQL DBMS.
  */
-export class MysqlDriver implements Driver {
+export class PugDriver implements Driver {
 
     // -------------------------------------------------------------------------
     // Public Properties
@@ -55,7 +55,7 @@ export class MysqlDriver implements Driver {
     /**
      * Connection options.
      */
-    options: MysqlConnectionOptions;
+    options: PugConnectionOptions;
 
     /**
      * Master database used to perform all write queries.
@@ -289,7 +289,7 @@ export class MysqlDriver implements Driver {
 
     constructor(connection: Connection) {
         this.connection = connection;
-        this.options = connection.options as MysqlConnectionOptions;
+        this.options = connection.options as PugConnectionOptions;
         this.isReplicated = this.options.replication ? true : false;
 
         // load mysql package
@@ -372,7 +372,7 @@ export class MysqlDriver implements Driver {
      * Creates a query runner used to execute database queries.
      */
     createQueryRunner(mode: "master" | "slave" = "master") {
-        return new MysqlQueryRunner(this, mode);
+        return new PugQueryRunner(this, mode);
     }
 
     /**
@@ -806,7 +806,7 @@ export class MysqlDriver implements Driver {
     /**
      * Creates a new connection pool for a given database credentials.
      */
-    protected createConnectionOptions(options: MysqlConnectionOptions, credentials: MysqlConnectionCredentialsOptions): Promise<any> {
+    protected createConnectionOptions(options: PugConnectionOptions, credentials: PugConnectionCredentialsOptions): Promise<any> {
 
         credentials = Object.assign(credentials, DriverUtils.buildDriverOptions(credentials)); // todo: do it better way
 
@@ -844,18 +844,24 @@ export class MysqlDriver implements Driver {
 
         // create a connection pool
         const pool = this.mysql.createPool(connectionOptions);
+        // console.log(connectionOptions);
 
         // make sure connection is working fine
         return new Promise<void>((ok, fail) => {
             // (issue #610) we make first connection to database to make sure if connection credentials are wrong
             // we give error before calling any other method that creates actual query runner
-            pool.getConnection((err: any, connection: any) => {
-                if (err)
-                    return pool.end(() => fail(err));
 
-                connection.release();
-                ok(pool);
-            });
+            /**
+             * PUG: Don't test connection to the pool.
+             */
+            // pool.getConnection((err: any, connection: any) => {
+            //     if (err)
+            //         return pool.end(() => fail(err));
+
+            //     connection.release();
+            //     ok(pool);
+            // });
+            ok(pool);
         });
     }
 

@@ -1,17 +1,17 @@
 import { BaseConnectionOptions } from "../../connection/BaseConnectionOptions";
-import { MysqlConnectionCredentialsOptions } from "./MysqlConnectionCredentialsOptions";
+import { PugConnectionCredentialsOptions } from "./PugConnectionCredentialsOptions";
 
 /**
  * MySQL specific connection options.
  *
  * @see https://github.com/mysqljs/mysql#connection-options
  */
-export interface MysqlConnectionOptions extends BaseConnectionOptions, MysqlConnectionCredentialsOptions {
+export interface PugConnectionOptions extends BaseConnectionOptions, PugConnectionCredentialsOptions {
 
     /**
      * Database type.
      */
-    readonly type: "mysql" | "mariadb";
+    readonly type: "pug";
 
     /**
      * The charset for the connection. This is called "collation" in the SQL-level of MySQL (like utf8_general_ci).
@@ -96,12 +96,12 @@ export interface MysqlConnectionOptions extends BaseConnectionOptions, MysqlConn
         /**
          * Master server used by orm to perform writes.
          */
-        readonly master: MysqlConnectionCredentialsOptions;
+        readonly master: PugConnectionCredentialsOptions;
 
         /**
          * List of read-from severs (slaves).
          */
-        readonly slaves: MysqlConnectionCredentialsOptions[];
+        readonly slaves: PugConnectionCredentialsOptions[];
 
         /**
          * If true, PoolCluster will attempt to reconnect when connection fails. (Default: true)

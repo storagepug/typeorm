@@ -7,7 +7,7 @@ import { Table } from "../../schema-builder/table/Table";
 import { TableForeignKey } from "../../schema-builder/table/TableForeignKey";
 import { TableIndex } from "../../schema-builder/table/TableIndex";
 import { QueryRunnerAlreadyReleasedError } from "../../error/QueryRunnerAlreadyReleasedError";
-import { MysqlDriver } from "./MysqlDriver";
+import { PugDriver } from "./PugDriver";
 import { ReadStream } from "../../platform/PlatformTools";
 import { OrmUtils } from "../../util/OrmUtils";
 import { QueryFailedError } from "../../error/QueryFailedError";
@@ -19,11 +19,15 @@ import { ColumnType, PromiseUtils } from "../../index";
 import { TableCheck } from "../../schema-builder/table/TableCheck";
 import { IsolationLevel } from "../types/IsolationLevel";
 import { TableExclusion } from "../../schema-builder/table/TableExclusion";
+const aws = require("aws-sdk");
+const lambda = new aws.Lambda({
+    region: "us-east-1"
+});
 
 /**
  * Runs queries on a single mysql database connection.
  */
-export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
+export class PugQueryRunner extends BaseQueryRunner implements QueryRunner {
 
     // -------------------------------------------------------------------------
     // Public Implemented Properties
@@ -32,7 +36,9 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
     /**
      * Database driver used by connection.
      */
-    driver: MysqlDriver;
+    driver: PugDriver;
+
+    count = 0;
 
     // -------------------------------------------------------------------------
     // Protected Properties
@@ -47,7 +53,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
     // Constructor
     // -------------------------------------------------------------------------
 
-    constructor(driver: MysqlDriver, mode: "master" | "slave" = "master") {
+    constructor(driver: PugDriver, mode: "master" | "slave" = "master") {
         super();
         this.driver = driver;
         this.connection = driver.connection;
@@ -142,30 +148,47 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
      * Executes a raw SQL query.
      */
     query(query: string, parameters?: any[]): Promise<any> {
+        // console.log("Query: ", query);
+        // console.log("parameters: ", parameters);
+
         if (this.isReleased)
             throw new QueryRunnerAlreadyReleasedError();
 
         return new Promise(async (ok, fail) => {
             try {
-                const databaseConnection = await this.connect();
+                // const databaseConnection = await this.connect();
                 this.driver.connection.logger.logQuery(query, parameters, this);
                 const queryStartTime = +new Date();
-                databaseConnection.query(query, parameters, (err: any, result: any) => {
 
-                    // log slow queries if maxQueryExecution time is set
-                    const maxQueryExecutionTime = this.driver.connection.options.maxQueryExecutionTime;
-                    const queryEndTime = +new Date();
-                    const queryExecutionTime = queryEndTime - queryStartTime;
-                    if (maxQueryExecutionTime && queryExecutionTime > maxQueryExecutionTime)
-                        this.driver.connection.logger.logQuerySlow(queryExecutionTime, query, parameters, this);
+                const params = {
+                    FunctionName: "pug-crm-rds-dev-run-query",
+                    InvocationType: "RequestResponse",
+                    Payload: JSON.stringify({
+                        query,
+                        parameters
+                    })
+                };
 
-                    if (err) {
-                        this.driver.connection.logger.logQueryError(err, query, parameters, this);
-                        return fail(new QueryFailedError(query, parameters, err));
+                lambda.invoke(params, (error: any, data: any) => {
+                    if (error) {
+                        this.driver.connection.logger.logQueryError(error, query, parameters, this);
+                        return fail(new QueryFailedError(query, parameters, error));
                     }
+                    else if (data) {
+                        // console.log(data);
+                        const maxQueryExecutionTime = this.driver.connection.options.maxQueryExecutionTime;
+                        const queryEndTime = +new Date();
+                        const queryExecutionTime = queryEndTime - queryStartTime;
+                        if (maxQueryExecutionTime && queryExecutionTime > maxQueryExecutionTime)
+                            this.driver.connection.logger.logQuerySlow(queryExecutionTime, query, parameters, this);
 
-                    ok(result);
+                        let payload = JSON.parse(data.Payload);
+                        let body = JSON.parse(payload.body);
+                        // console.log(JSON.stringify(body, null, 2));
+                        ok(body);
+                    }
                 });
+
 
             } catch (err) {
                 fail(err);
@@ -1179,7 +1202,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
         if (!dbTables.length)
             return [];
 
-        const isMariaDb = this.driver.options.type === "mariadb";
+        const isMariaDb = false;
 
         // create tables for loaded tables
         return Promise.all(dbTables.map(async dbTable => {
