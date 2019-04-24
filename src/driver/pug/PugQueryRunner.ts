@@ -10,7 +10,7 @@ import { QueryRunnerAlreadyReleasedError } from "../../error/QueryRunnerAlreadyR
 import { PugDriver } from "./PugDriver";
 import { ReadStream } from "../../platform/PlatformTools";
 import { OrmUtils } from "../../util/OrmUtils";
-import { QueryFailedError } from "../../error/QueryFailedError";
+// import { QueryFailedError } from "../../error/QueryFailedError";
 import { TableIndexOptions } from "../../schema-builder/options/TableIndexOptions";
 import { TableUnique } from "../../schema-builder/table/TableUnique";
 import { BaseQueryRunner } from "../../query-runner/BaseQueryRunner";
@@ -19,10 +19,12 @@ import { ColumnType, PromiseUtils } from "../../index";
 import { TableCheck } from "../../schema-builder/table/TableCheck";
 import { IsolationLevel } from "../types/IsolationLevel";
 import { TableExclusion } from "../../schema-builder/table/TableExclusion";
-const aws = require("aws-sdk");
-const lambda = new aws.Lambda({
-    region: "us-east-1"
-});
+// const aws = require("aws-sdk");
+const axios = require("axios");
+
+// const lambda = new aws.Lambda({
+//     region: "us-east-1"
+// });
 
 /**
  * Runs queries on a single mysql database connection.
@@ -158,36 +160,41 @@ export class PugQueryRunner extends BaseQueryRunner implements QueryRunner {
             try {
                 // const databaseConnection = await this.connect();
                 this.driver.connection.logger.logQuery(query, parameters, this);
-                const queryStartTime = +new Date();
+                // const queryStartTime = +new Date();
 
-                const params = {
-                    FunctionName: "pug-crm-rds-dev-run-query",
-                    InvocationType: "RequestResponse",
-                    Payload: JSON.stringify({
-                        query,
-                        parameters
-                    })
-                };
-
-                lambda.invoke(params, (error: any, data: any) => {
-                    if (error) {
-                        this.driver.connection.logger.logQueryError(error, query, parameters, this);
-                        return fail(new QueryFailedError(query, parameters, error));
-                    }
-                    else if (data) {
-                        // console.log(data);
-                        const maxQueryExecutionTime = this.driver.connection.options.maxQueryExecutionTime;
-                        const queryEndTime = +new Date();
-                        const queryExecutionTime = queryEndTime - queryStartTime;
-                        if (maxQueryExecutionTime && queryExecutionTime > maxQueryExecutionTime)
-                            this.driver.connection.logger.logQuerySlow(queryExecutionTime, query, parameters, this);
-
-                        let payload = JSON.parse(data.Payload);
-                        let body = JSON.parse(payload.body);
-                        // console.log(JSON.stringify(body, null, 2));
-                        ok(body);
-                    }
+                // const params = {
+                //     FunctionName: "pug-crm-rds-dev-run-query",
+                //     InvocationType: "RequestResponse",
+                //     Payload: JSON.stringify({
+                //         query,
+                //         parameters
+                //     })
+                // };
+                let ret = await axios.post("http://ip-172-31-46-44.ec2.internal:3001/query", {
+                    query,
+                    parameters
                 });
+                // console.log(ret);
+                ok(ret.data);
+                // lambda.invoke(params, (error: any, data: any) => {
+                //     if (error) {
+                //         this.driver.connection.logger.logQueryError(error, query, parameters, this);
+                //         return fail(new QueryFailedError(query, parameters, error));
+                //     }
+                //     else if (data) {
+                //         // console.log(data);
+                //         const maxQueryExecutionTime = this.driver.connection.options.maxQueryExecutionTime;
+                //         const queryEndTime = +new Date();
+                //         const queryExecutionTime = queryEndTime - queryStartTime;
+                //         if (maxQueryExecutionTime && queryExecutionTime > maxQueryExecutionTime)
+                //             this.driver.connection.logger.logQuerySlow(queryExecutionTime, query, parameters, this);
+
+                //         let payload = JSON.parse(data.Payload);
+                //         let body = JSON.parse(payload.body);
+                //         // console.log(JSON.stringify(body, null, 2));
+                //         ok(body);
+                //     }
+                // });
 
 
             } catch (err) {
